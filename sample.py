@@ -1,0 +1,32 @@
+symbol = 'AAPL'
+# df = data.get_day(symbol)
+df = data.get_daily(symbol)
+
+#Calculating 3 moving averages
+#1. short/fast exponential moving average
+short_ema = df['4. close'].ewm(span=5, adjust=False).mean()
+#2. long/slow exponential moving average
+long_ema = df['4. close'].ewm(span=63, adjust=False).mean()
+#3. medium exponential moving average
+mid_ema = df['4. close'].ewm(span=29, adjust=False).mean()
+
+#Strategy is to look at intersection of moving average lines
+#Append moving averages to dataframe
+df['Short'] = short_ema
+df['Middle'] = mid_ema
+df['Long'] = long_ema
+
+#Store buy/sell data in dataframe
+df['Buy'] = strategy_3ma(df)[0]
+df['Sell'] = strategy_3ma(df)[1]
+
+#Profit calculation
+print(unit_net(df))
+
+visualize.buy_sell_plot(symbol, df)
+
+
+
+
+
+

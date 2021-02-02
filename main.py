@@ -1,27 +1,44 @@
-import config
-import requests
-from alpha_vantage.timeseries import TimeSeries
-from alpha_vantage.techindicators import TechIndicators
 import pandas as pd
-import matplotlib.pyplot as plt
+import numpy as np
+import strategies
+import data
+import visualize
+#############################
+##1. Sample 3 moving averages
+symbol = 'AAPL'
+df = data.get_daily(symbol)
 
-company='MSFT'
+long=26 #63
+mid=19 #29
+short=12 #5
+#Calculating 3 moving averages
+#1. short/fast exponential moving average
+short_ema = df['4. close'].ewm(span=short, adjust=False).mean()
+#2. long/slow exponential moving average
+long_ema = df['4. close'].ewm(span=long, adjust=False).mean()
+#3. medium exponential moving average
+mid_ema = df['4. close'].ewm(span=mid, adjust=False).mean()
 
-ts = TimeSeries(key=config.AV_KEY, output_format='pandas')
-data_ts, metadata_ts = ts.get_intraday(symbol=company, interval='1min', outputsize='full')
+#Strategy is to look at intersection of moving average lines
+#Append moving averages to dataframe
+df['Short'] = short_ema
+df['Middle'] = mid_ema
+df['Long'] = long_ema
 
-period = 60
-ti = TechIndicators(key=config.AV_KEY, output_format='pandas')
-data_ti, metadata_ti = ti.get_sma(symbol=company, interval='1min', time_period=period, series_type='close')
+#Store buy/sell data in dataframe
+df['Buy'] = strategies.strategy_3ma(df)[0]
+df['Sell'] = strategies.strategy_3ma(df)[1]
 
-df1 = data_ti
-df2 = data_ts['4. close'].iloc[period-1::]
+#Profit calculation
+print(strategies.unit_net(df))
 
-df2.index = df1.index
-total_df = pd.concat([df1,df2], axis=1)
-print(total_df)
+visualize.buy_sell_plot(symbol, df)
 
-total_df.plot()
-plt.show()
+#############################
+##1. Sample Moving averages
+
+
+
+
 
 
